@@ -11,8 +11,8 @@ exports.conductAnAudit = (req, res) => {
 	testURLs = checkURL(url);
 
 	if (testURLs === false) {
-		res.status(400).send(JSON.stringify({ error: 'Invalid URL: URL Test level' }));
-		return;
+		res.status(400).send(JSON.stringify({ message: 'Nieprawidłowy adres URL' }));
+		return false;
 	}
 
 	let requests = Object.values(JSON.parse(fs.readFileSync('./storage/requests.json')));
@@ -28,18 +28,29 @@ exports.conductAnAudit = (req, res) => {
 		let newData = Object.values(JSON.parse(fs.readFileSync('./storage/queue.json')));
 		if (newData[0][0] == reportID) {
 			clearInterval(interval);
-			newData[0][1].every((test) => {
-				axios.get(test).then((response) => {
-					if (response.status >= 200 && response.status < 300 && response.data) {
-						audit(test, reportID).then((result) => {
-							if (result) {
-								if (fs.existsSync(`./storage/${reportID}.html`)) {
-									res.send(reportID);
+			newData[0][1].every((link) => {
+				axios.get(link).then((response) => {
+					if (response.status >= 200 && response.status < 300) {
+						if (response.data) {
+							audit(link, reportID).then((result) => {
+								if (result) {
+									if (fs.existsSync(`./storage/${reportID}.html`)) {
+										res.send(reportID);
+									}
+								} else {
+									res.send({ message: 'Problem z związany LightHouse' });
+									return false;
 								}
-							} else {
-								res.send({ error: 'Invalid URL: Lighthouse level' });
-							}
-						});
+							});
+						} else {
+							clearQueueFirstElement(reportID);
+							res.status(400).send(JSON.stringify({ message: 'Strona nie zawiera treści' }));
+							return false;
+						}
+					} else {
+						clearQueueFirstElement(reportID);
+						res.status(400).send(JSON.stringify({ message: 'Strona nie odpowiada' }));
+						return false;
 					}
 				});
 			});
@@ -98,27 +109,27 @@ const audit = async (url, reportID) => {
 		const runnerResult = await lighthouse(url, runnerOptions);
 		fs.writeFileSync(`./storage/${reportID}.html`, runnerResult.report);
 		await chrome.kill();
-		let currentQ = Object.values(JSON.parse(fs.readFileSync('./storage/queue.json')));
-		if (currentQ[0][0] == reportID) {
-			currentQ.shift();
-			fs.writeFileSync('./storage/queue.json', JSON.stringify(currentQ));
-			return true;
-		}
+		clearQueueFirstElement(reportID);
+		return true;
 	} catch (e) {
 		await chrome.kill();
-		let currentQ = Object.values(JSON.parse(fs.readFileSync('./storage/queue.json')));
-		if (currentQ[0][0] == reportID) {
-			currentQ.shift();
-			fs.writeFileSync('./storage/queue.json', JSON.stringify(currentQ));
-			return false;
-		}
+		clearQueueFirstElement(reportID);
+		return false;
 	}
 };
 
 const currentDate = () => {
 	var now = new Date();
-	var formatDate = now.getFullYear() + '-' + (now.getMonth() + 1 < 10 ? `0${now.getMonth() + 1}` : now.getMonth() + 1) + '-' + now.getDate() + 'T' + now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds() + '.' + now.getMilliseconds() + 'Z';
-	return formatDate;
+	var formattedDate = now.getFullYear() + '-' + (now.getMonth() + 1 < 10 ? `0${now.getMonth() + 1}` : now.getMonth() + 1) + '-' + (now.getDate() < 10 ? `0${now.getDate()}` : now.getDate()) + 'T' + (now.getHours() < 10 ? `0${now.getHours()}` : now.getHours()) + ':' + (now.getMinutes() < 10 ? `0${now.getMinutes()}` : now.getMinutes()) + ':' + (now.getSeconds() < 10 ? `0${now.getSeconds()}` : now.getSeconds()) + 'Z';
+	return formattedDate;
+};
+
+const clearQueueFirstElement = (reportID) => {
+	let currentQ = Object.values(JSON.parse(fs.readFileSync('./storage/queue.json')));
+	if (currentQ[0][0] == reportID) {
+		currentQ.shift();
+		fs.writeFileSync('./storage/queue.json', JSON.stringify(currentQ));
+	}
 };
 // /root/docs/server/storage/
 // ./storage/
