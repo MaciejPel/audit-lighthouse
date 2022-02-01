@@ -8,6 +8,7 @@ export default function MakeAudit() {
 	let navigate = useNavigate();
 	const handleSubmit = (e) => {
 		e.preventDefault();
+		setError(false);
 		let str = e.target[0].value;
 		var body = {
 			auditURL: str,
@@ -20,7 +21,7 @@ export default function MakeAudit() {
 				navigate(`/report/${res.data}`);
 			})
 			.catch(function (error) {
-				setError(true);
+				setError(error.response.data.message);
 				setLoading(false);
 			});
 	};
@@ -28,7 +29,7 @@ export default function MakeAudit() {
 		<>
 			<form autoComplete="off" onSubmit={handleSubmit} className="flex justify-center items-center flex-col lg:items-start mt-2">
 				<input id="input-domain" disabled={loading ? true : false} type="text" name="data" spellCheck={false} className={'px-3 py-3 font-semibold bg-white text-black rounded text-sm border-0 shadow outline-none w-80 text-center'} />
-				{error ? <div className="error bg-rose-700 text-white-600 px-8 py-2 my-2 text-center rounded font-semibold hover:bg-rose-600 transition">Nieprawidłowy adres URL</div> : <div className="h-3.5"></div>}
+				{error ? <div className="error bg-rose-700 text-white-600 px-8 py-2 my-2 text-center rounded font-semibold hover:bg-rose-600 transition">{error}</div> : <div className="h-3.5"></div>}
 				{loading ? (
 					<button type="button" className="inline-flex items-center px-4 py-2 font-semibold leading-6 text-sm shadow rounded-md text-white bg-indigo-500 hover:bg-indigo-400 transition ease-in-out duration-150 cursor-not-allowed" disabled="">
 						<svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import HeaderStatic from './HeaderStatic';
 
 export default function Report() {
-	document.title = 'Raport — Ads&Seo';
+	document.title = 'Raport - Ads&Seo';
 	let navigate = useNavigate();
 
 	useEffect(() => {
