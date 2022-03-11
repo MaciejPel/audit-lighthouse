@@ -29,7 +29,7 @@ export default function Footer() {
 							<a href="https://adsandseo.pl/projektowanie-stron-www/" target="_blank" rel="noreferrer" className="block my-2 hover:underline">
 								Tworzenie stron
 							</a>
-							<a href="https://adsandseo.pl/ pozycjonowanie-stron/" target="_blank" rel="noreferrer" className="block my-2 hover:underline">
+							<a href="https://adsandseo.pl/pozycjonowanie-stron/" target="_blank" rel="noreferrer" className="block my-2 hover:underline">
 								Pozycjonowanie stron
 							</a>
 							<a href="https://adsandseo.pl/2021/08/30/google-ads-2/" target="_blank" rel="noreferrer" className="block my-2 hover:underline">

@@ -9,6 +9,12 @@ export default function Header() {
 				<img src={logo} style={{ maxWidth: '40px', height: '40px' }} alt="" />
 			</Link>
 			<nav className="flex justify-between gap-3 items-center text-white font-semibold">
+				<a className="hover:bg-blue-500 hover:shadow-md hover:shadow-blue-500/50 transition-all px-2 py-2 rounded-md" rel="noreferrer" href="https://adsandseo.pl/" target="_blank">
+					Ads&Seo
+				</a>
+				<Link className="hover:bg-blue-500 hover:shadow-md hover:shadow-blue-500/50 transition-all px-2 py-2 rounded-md " to="/stack">
+					Stack
+				</Link>
 				<Link className="hover:bg-pink-500 hover:shadow-md hover:shadow-pink-500/50 transition-all px-2 py-2 rounded-md" to="/contact">
 					Kontakt
 				</Link>

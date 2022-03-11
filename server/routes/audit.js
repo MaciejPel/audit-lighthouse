@@ -28,32 +28,56 @@ exports.conductAnAudit = (req, res) => {
 		let newData = Object.values(JSON.parse(fs.readFileSync('./storage/queue.json')));
 		if (newData[0][0] == reportID) {
 			clearInterval(interval);
-			newData[0][1].every((link) => {
-				axios.get(link).then((response) => {
-					if (response.status >= 200 && response.status < 300) {
-						if (response.data) {
-							audit(link, reportID).then((result) => {
-								if (result) {
-									if (fs.existsSync(`./storage/${reportID}.html`)) {
-										res.send(reportID);
+			const pleaseWork = (link) => {
+				console.log(link);
+				axios
+					.get(link)
+					.then((response) => {
+						if (response.status >= 200 && response.status < 300) {
+							if (response.data) {
+								audit(link, reportID).then((result) => {
+									if (result) {
+										if (fs.existsSync(`./storage/${reportID}.html`)) {
+											res.send(reportID);
+											return;
+										}
+									} else {
+										res.send({ message: 'Problem z związany LightHouse' });
+										return;
 									}
-								} else {
-									res.send({ message: 'Problem z związany LightHouse' });
-									return false;
-								}
-							});
+								});
+							} else {
+								clearQueueFirstElement(reportID);
+								res.status(400).send(JSON.stringify({ message: 'Strona nie zawiera treści' }));
+								return;
+							}
 						} else {
 							clearQueueFirstElement(reportID);
-							res.status(400).send(JSON.stringify({ message: 'Strona nie zawiera treści' }));
-							return false;
+							res.status(400).send(JSON.stringify({ message: 'Strona nie odpowiada' }));
+							return;
 						}
-					} else {
-						clearQueueFirstElement(reportID);
-						res.status(400).send(JSON.stringify({ message: 'Strona nie odpowiada' }));
-						return false;
-					}
-				});
-			});
+					})
+					.catch((e) => {
+						return e;
+					})
+					.finally(() => {
+						return;
+					});
+				return;
+			};
+			try {
+				console.log(1);
+				pleaseWork(newData[0][1][0]);
+			} catch (error) {
+				console.log(error);
+				try {
+					console.log(2);
+					pleaseWork(newData[0][1][1]);
+				} catch (error2) {
+					console.log(error2);
+					res.status(400).send(JSON.stringify({ message: 'Coś poszło nie tak' }));
+				}
+			}
 		}
 	}, 1500);
 };
@@ -113,6 +137,7 @@ const audit = async (url, reportID) => {
 		return true;
 	} catch (e) {
 		await chrome.kill();
+		console.log(e.message);
 		clearQueueFirstElement(reportID);
 		return false;
 	}
@@ -126,10 +151,13 @@ const currentDate = () => {
 
 const clearQueueFirstElement = (reportID) => {
 	let currentQ = Object.values(JSON.parse(fs.readFileSync('./storage/queue.json')));
-	if (currentQ[0][0] == reportID) {
-		currentQ.shift();
-		fs.writeFileSync('./storage/queue.json', JSON.stringify(currentQ));
+	if (currentQ[0] && currentQ[0][0]) {
+		if (currentQ[0][0] == reportID) {
+			currentQ.shift();
+			fs.writeFileSync('./storage/queue.json', JSON.stringify(currentQ));
+		}
 	}
 };
+
 // /root/docs/server/storage/
 // ./storage/
